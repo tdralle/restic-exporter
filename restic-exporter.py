@@ -13,6 +13,7 @@ import traceback
 from prometheus_client import start_http_server
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
+from croniter import croniter
 
 class ResticCollector(object):
     def __init__(
@@ -391,7 +392,7 @@ if __name__ == "__main__":
 
     exporter_address = os.environ.get("LISTEN_ADDRESS", "0.0.0.0")
     exporter_port = int(os.environ.get("LISTEN_PORT", 8001))
-    exporter_refresh_interval = int(os.environ.get("REFRESH_INTERVAL", 60))
+    exporter_refresh_cron_expression = os.environ.get("REFRESH_CRON", "* * * * *")
     exporter_exit_on_error = bool(os.environ.get("EXIT_ON_ERROR", False))
     exporter_disable_check = bool(os.environ.get("NO_CHECK", False))
     exporter_disable_stats = bool(os.environ.get("NO_STATS", False))
@@ -416,11 +417,12 @@ if __name__ == "__main__":
             "Serving at http://{0}:{1}".format(exporter_address, exporter_port)
         )
 
+        cron = croniter(exporter_refresh_cron_expression, datetime.datetime.now())
+
         while True:
-            logging.info(
-                "Refreshing stats every {0} seconds".format(exporter_refresh_interval)
-            )
-            time.sleep(exporter_refresh_interval)
+            next_execution = cron.get_next(datetime.datetime, datetime.datetime.now());
+            logging.info("Metrics will be refreshed at {0}".format(next_execution))
+            time.sleep((next_execution - datetime.datetime.now()).total_seconds())
             collector.refresh()
 
     except KeyboardInterrupt:

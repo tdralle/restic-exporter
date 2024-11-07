@@ -62,7 +62,7 @@ services:
       - RESTIC_REPOSITORY=/data
       - RESTIC_PASSWORD=<password_here>
       # - RESTIC_PASSWORD_FILE=</file_with_password_here>
-      - REFRESH_INTERVAL=1800 # 30 min
+      - REFRESH_CRON=* * * * *
     volumes:
       - /host_path/restic/data:/data
     ports:
@@ -78,7 +78,7 @@ docker run -d \
   -e TZ=Europe/Madrid \
   -e RESTIC_REPOSITORY=/data \
   -e RESTIC_PASSWORD=<password_here> \
-  -e REFRESH_INTERVAL=1800 \
+  -e 'REFRESH_CRON=* * * * *' \
   -p 8001:8001 \
   --restart unless-stopped \
   ngosang/restic-exporter
@@ -109,9 +109,10 @@ backends.
 backends.
 - `B2_ACCOUNT_ID`: (Optional) Required for Backblaze B2 backend.
 - `B2_ACCOUNT_KEY`: (Optional) Required for Backblaze B2 backend.
-- `REFRESH_INTERVAL`: (Optional) Refresh interval for the metrics in seconds.
-Computing the metrics is an expensive task, keep this value as high as possible.
-Default is `60` seconds.
+- `REFRESH_CRON`: (Optional) Defines at what times the metrics will be refreshed
+based on a cron expression. Computing the metrics is an expensive task and therefor
+the refresh times should be chosen accordingly. Default value is '* * * * *' 
+(every 60 seconds).
 - `LISTEN_PORT`: (Optional) The address the exporter should listen on. The
 default is `8001`.
 - `LISTEN_ADDRESS`: (Optional) The address the exporter should listen on. The
@@ -141,7 +142,7 @@ services:
       - TZ=Europe/Madrid
       - RESTIC_REPOSITORY=rclone:gd-backup:/restic
       - RESTIC_PASSWORD= 
-      - REFRESH_INTERVAL=1800 # 30 min
+      - REFRESH_CRON=* * * * *
     volumes:
       - /host_path/restic/data:/data
       - /usr/bin/rclone:/usr/bin/rclone:ro
